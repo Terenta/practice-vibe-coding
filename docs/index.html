@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Школа Вайбкодеров — Стажировка</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..900&family=JetBrains+Mono:wght@400..700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0F17; --bg-2:#0F1624; --bg-3:#141E2E;
+  --text:#E8ECF4; --text-dim:#9BA3B5; --text-faded:#6B7280;
+  --violet:#7C3AED; --violet-bright:#A855F7;
+  --cyan:#06B6D4; --cyan-bright:#22D3EE;
+  --green:#10B981; --amber:#F59E0B; --red:#EF4444; --pink:#EC4899;
+  --border:rgba(124,58,237,.22); --border-bright:rgba(124,58,237,.45);
+  --glass:rgba(20,30,46,.55); --glass-strong:rgba(20,30,46,.85);
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+/* Прячем скроллбары: контент остаётся скроллируемым, но полоса не рисуется.
+   В сочетании с авто-подстройкой высоты iframe (postMessage) — даёт чистый вид
+   без двойных полос в Tilda-обёртке. */
+html,body{scrollbar-width:none;-ms-overflow-style:none}
+html::-webkit-scrollbar,body::-webkit-scrollbar,*::-webkit-scrollbar{width:0;height:0;display:none}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;-webkit-font-smoothing:antialiased;
+  position:relative;overflow-x:hidden
+}
+/* В режиме iframe (Tilda-эмбед) убираем min-height: 100vh, иначе body
+   фиксируется на высоте самого высокого экрана и iframe не сжимается обратно. */
+html.embed,html.embed body{min-height:0}
+html.embed .entry-screen{min-height:0;padding:48px 20px}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse at 15% 10%, rgba(124,58,237,.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 90%, rgba(6,182,212,.14) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(168,85,247,.05) 0%, transparent 70%)
+}
+body > *{position:relative;z-index:1}
+
+/* === HEADER === */
+header{
+  background:rgba(11,15,23,.72);backdrop-filter:blur(18px) saturate(140%);
+  -webkit-backdrop-filter:blur(18px) saturate(140%);
+  border-bottom:1px solid var(--border);
+  padding:12px 28px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:200
+}
+.logo{
+  font-size:20px;font-weight:900;letter-spacing:-.5px;
+  background:linear-gradient(135deg,#fff 0%,#A855F7 60%,#22D3EE 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent
+}
+.header-right{display:flex;align-items:center;gap:10px}
+.user-badge{
+  display:none;align-items:center;gap:8px;
+  padding:6px 14px 6px 6px;
+  background:rgba(124,58,237,.14);border-radius:24px;
+  border:1px solid var(--border-bright)
+}
+.user-badge.show{display:flex}
+.user-avatar{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,#7C3AED,#22D3EE);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:900;font-size:13px
+}
+.user-name{font-weight:800;font-size:13px;color:var(--text)}
+.user-tag{
+  font-size:10px;color:var(--cyan-bright);font-weight:700;
+  font-family:'JetBrains Mono',monospace;letter-spacing:.1em
+}
+.api-input{
+  padding:8px 13px;border:1px solid var(--border);border-radius:10px;
+  font-size:13px;width:200px;font-family:'JetBrains Mono',monospace;
+  background:rgba(20,30,46,.6);color:var(--text)
+}
+.api-input::placeholder{color:var(--text-faded)}
+.api-input:focus{outline:none;border-color:var(--violet-bright);background:rgba(20,30,46,.9)}
+.api-input.missing{border-color:var(--red);box-shadow:0 0 0 3px rgba(239,68,68,.2);animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.btn{
+  padding:8px 16px;border-radius:10px;border:1px solid transparent;cursor:pointer;
+  font-weight:600;font-size:13px;font-family:inherit;transition:all .15s
+}
+.btn-ghost{background:rgba(124,58,237,.14);color:var(--violet-bright);border-color:var(--border)}
+.btn-ghost:hover{background:rgba(124,58,237,.22);border-color:var(--border-bright)}
+.btn-primary{background:linear-gradient(135deg,var(--violet),var(--cyan));color:#fff;border:none}
+.btn-primary:hover{filter:brightness(1.15);box-shadow:0 0 0 2px rgba(124,58,237,.3)}
+.btn-demo{
+  background:rgba(245,158,11,.12);color:var(--amber);
+  border:1px solid rgba(245,158,11,.35);font-family:'JetBrains Mono',monospace;font-size:12px
+}
+.btn-demo:hover{background:rgba(245,158,11,.2)}
+.key-saved{color:var(--green);font-size:12px;font-weight:700;opacity:0;transition:opacity .3s}
+.key-saved.show{opacity:1}
+
+/* === SCREENS === */
+.screen{display:none;animation:fadeIn .35s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.wrap{max-width:960px;margin:0 auto;padding:40px 24px 80px}
+
+/* === ENTRY === */
+.entry-screen{
+  min-height:calc(100vh - 57px);display:flex;align-items:center;justify-content:center;padding:40px 20px
+}
+.entry-card{
+  background:var(--glass);backdrop-filter:blur(18px) saturate(140%);
+  -webkit-backdrop-filter:blur(18px) saturate(140%);
+  border:1px solid var(--border);border-radius:24px;
+  padding:44px 40px;max-width:540px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center
+}
+.entry-stamp{
+  display:inline-block;
+  background:rgba(124,58,237,.14);color:var(--violet-bright);
+  padding:6px 14px;border-radius:999px;font-size:11px;font-weight:600;
+  letter-spacing:.18em;margin-bottom:20px;text-transform:uppercase;
+  font-family:'JetBrains Mono',monospace;
+  border:1px solid var(--border-bright)
+}
+.entry-card h1{
+  font-size:36px;font-weight:900;line-height:1.05;margin-bottom:12px;letter-spacing:-.02em
+}
+.entry-card h1 span{
+  background:linear-gradient(135deg,#fff 0%,#E8ECF4 35%,#A855F7 70%,#22D3EE 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text
+}
+.entry-card .lead{font-size:15px;color:var(--text-dim);margin-bottom:28px;line-height:1.55}
+.entry-block{text-align:left;margin-bottom:20px}
+.entry-block label{
+  display:block;font-size:11px;font-weight:600;color:var(--cyan-bright);
+  letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px;
+  font-family:'JetBrains Mono',monospace
+}
+.name-input{
+  width:100%;padding:14px 18px;
+  border:1.5px solid var(--border);border-radius:12px;
+  font-size:17px;font-family:inherit;font-weight:600;
+  background:rgba(20,30,46,.6);color:var(--text);
+  transition:all .15s
+}
+.name-input::placeholder{color:var(--text-faded)}
+.name-input:focus{outline:none;border-color:var(--violet-bright);background:rgba(20,30,46,.9)}
+.age-pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.age-pill{
+  flex:1;min-width:60px;padding:16px 12px;
+  border:1.5px solid var(--border);border-radius:12px;
+  background:rgba(20,30,46,.55);cursor:pointer;font-family:inherit;
+  font-size:18px;font-weight:800;transition:all .15s;color:var(--text)
+}
+.age-pill:hover{border-color:var(--border-bright);color:var(--violet-bright);transform:translateY(-2px)}
+.age-pill.sel{
+  border-color:var(--violet-bright);
+  background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(6,182,212,.1));
+  color:#fff;box-shadow:0 0 0 3px rgba(124,58,237,.2),0 8px 24px rgba(124,58,237,.25)
+}
+.age-pill small{
+  display:block;font-size:10px;font-weight:600;color:var(--text-faded);margin-top:4px;
+  letter-spacing:.08em;font-family:'JetBrains Mono',monospace
+}
+.age-pill.sel small{color:var(--cyan-bright)}
+.entry-submit{
+  width:100%;padding:17px;margin-top:8px;
+  background:linear-gradient(135deg,var(--violet),var(--cyan));color:#fff;
+  border:none;border-radius:14px;cursor:pointer;font-weight:800;
+  font-size:16px;font-family:inherit;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  letter-spacing:-.01em
+}
+.entry-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 32px rgba(124,58,237,.4)}
+.entry-submit:disabled{opacity:.4;cursor:not-allowed}
+.entry-foot{
+  margin-top:16px;font-size:11px;color:var(--text-faded);
+  letter-spacing:.1em;font-family:'JetBrains Mono',monospace;text-transform:uppercase
+}
+
+/* === SCREEN HEADER === */
+.screen-header{text-align:center;margin-bottom:32px}
+.screen-header .eyebrow{
+  display:inline-block;font-family:'JetBrains Mono',monospace;
+  font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.18em;
+  color:var(--cyan-bright);margin-bottom:14px
+}
+.screen-header h2{
+  font-size:32px;font-weight:800;margin-bottom:10px;letter-spacing:-.02em;line-height:1.1
+}
+.screen-header p{color:var(--text-dim);font-size:15px}
+
+/* === PROJECT CARDS === */
+.projects-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-bottom:28px}
+.proj-card{
+  background:var(--glass);backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--border);border-radius:16px;
+  padding:24px;cursor:pointer;transition:all .2s;position:relative
+}
+.proj-card:hover{
+  border-color:var(--border-bright);transform:translateY(-3px);
+  box-shadow:0 12px 32px rgba(124,58,237,.2)
+}
+.proj-card.sel{
+  border-color:var(--violet-bright);
+  background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(6,182,212,.06));
+  box-shadow:0 0 0 3px rgba(124,58,237,.2),0 10px 30px rgba(124,58,237,.25)
+}
+.proj-card .emo{font-size:40px;display:block;margin-bottom:12px;line-height:1}
+.proj-card h3{font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text);letter-spacing:-.01em}
+.proj-card p{font-size:13.5px;color:var(--text-dim);line-height:1.55}
+.age-tag{
+  position:absolute;top:14px;right:14px;padding:3px 10px;border-radius:999px;
+  font-size:10px;font-weight:600;letter-spacing:.08em;
+  font-family:'JetBrains Mono',monospace;text-transform:uppercase
+}
+.tag-green{background:rgba(16,185,129,.14);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+.tag-yellow{background:rgba(245,158,11,.14);color:var(--amber);border:1px solid rgba(245,158,11,.3)}
+
+/* === CUSTOMIZE === */
+.customize-card{
+  background:var(--glass);backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--border);border-radius:18px;
+  padding:32px;margin-bottom:20px
+}
+.cust-q{margin-bottom:28px;padding-bottom:26px;border-bottom:1px dashed rgba(124,58,237,.15)}
+.cust-q:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.q-label{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:10px;color:var(--text)}
+.q-num{
+  width:26px;height:26px;
+  background:linear-gradient(135deg,var(--violet),var(--cyan));
+  color:#fff;border-radius:50%;font-size:12px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-family:'JetBrains Mono',monospace;
+  box-shadow:0 0 12px rgba(124,58,237,.5)
+}
+.q-sub{font-size:12px;color:var(--text-dim);font-weight:400;margin-left:4px}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{
+  padding:9px 15px;border:1px solid var(--border);border-radius:999px;
+  background:rgba(20,30,46,.55);cursor:pointer;font-size:13px;font-family:inherit;
+  color:var(--text-dim);transition:all .15s;white-space:nowrap
+}
+.pill:hover{border-color:var(--border-bright);color:var(--text)}
+.pill.sel{
+  border-color:var(--cyan-bright);
+  background:rgba(6,182,212,.14);
+  color:var(--cyan-bright);font-weight:600;
+  box-shadow:0 0 0 2px rgba(6,182,212,.2)
+}
+
+/* === VOICE === */
+.voice-card{
+  background:var(--glass);backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--border);border-radius:18px;
+  padding:30px;margin-bottom:18px
+}
+.helpers-box{
+  background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(6,182,212,.06));
+  border:1px solid var(--border-bright);border-radius:12px;
+  padding:18px 22px;margin-bottom:20px
+}
+.helpers-title{
+  font-size:11px;font-weight:600;color:var(--cyan-bright);margin-bottom:12px;
+  font-family:'JetBrains Mono',monospace;letter-spacing:.15em;text-transform:uppercase
+}
+.helpers-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+.helpers-list li{font-size:14px;line-height:1.5;color:var(--text-dim);padding-left:20px;position:relative}
+.helpers-list li::before{
+  content:'→';position:absolute;left:0;top:0;
+  color:var(--violet-bright);font-weight:700
+}
+.voice-row{display:flex;gap:12px;align-items:flex-start}
+.voice-btn{
+  width:56px;height:56px;border-radius:50%;border:none;
+  background:linear-gradient(135deg,var(--violet),var(--cyan));
+  color:#fff;font-size:22px;cursor:pointer;flex-shrink:0;
+  transition:all .2s;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 20px rgba(124,58,237,.3)
+}
+.voice-btn:hover{transform:scale(1.06);box-shadow:0 8px 26px rgba(124,58,237,.5)}
+.voice-btn.rec{
+  background:linear-gradient(135deg,var(--red),var(--pink));
+  animation:pulse 1s infinite;box-shadow:0 6px 20px rgba(239,68,68,.4)
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.45)}50%{box-shadow:0 0 0 14px rgba(239,68,68,0)}}
+.textarea{
+  flex:1;padding:14px 16px;
+  border:1.5px solid var(--border);border-radius:12px;
+  font-size:14px;font-family:inherit;min-height:100px;resize:vertical;line-height:1.6;
+  background:rgba(10,14,22,.7);color:var(--text)
+}
+.textarea::placeholder{color:var(--text-faded)}
+.textarea:focus{outline:none;border-color:var(--violet-bright);background:rgba(10,14,22,.95)}
+.hint{
+  color:var(--text-faded);font-size:12px;margin-top:10px;
+  font-family:'JetBrains Mono',monospace;letter-spacing:.02em
+}
+
+/* === STATUS + GEN === */
+.status-bar{
+  padding:13px 18px;border-radius:12px;font-weight:500;font-size:14px;
+  margin-bottom:14px;display:none;align-items:center;gap:10px;
+  font-family:'JetBrains Mono',monospace
+}
+.status-bar.loading{
+  display:flex;
+  background:rgba(245,158,11,.1);color:var(--amber);
+  border:1px solid rgba(245,158,11,.3)
+}
+.status-bar.error{
+  display:block;
+  background:rgba(239,68,68,.1);color:var(--red);
+  border:1px solid rgba(239,68,68,.3)
+}
+.result-warn{
+  display:none;
+  padding:11px 14px;border-radius:10px;
+  background:rgba(245,158,11,.1);color:var(--amber);
+  border:1px solid rgba(245,158,11,.3);
+  font-family:'JetBrains Mono',monospace;font-size:13px;
+  margin-bottom:12px;line-height:1.55
+}
+.result-warn.show{display:block}
+
+/* === RESULT HERO + STATS === */
+.result-hero{
+  text-align:center;margin-bottom:18px;
+  animation:slideUp .55s
+}
+.result-hero-title{
+  display:inline-block;font-size:22px;font-weight:800;letter-spacing:-.01em;margin-bottom:12px;
+  background:linear-gradient(135deg,var(--violet-bright),var(--cyan-bright));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-text-fill-color:transparent
+}
+.result-hero-stats{display:inline-flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.rstat{
+  display:inline-flex;align-items:baseline;gap:7px;
+  padding:7px 14px;border-radius:10px;
+  background:rgba(124,58,237,.1);border:1px solid var(--border);
+  font-family:'JetBrains Mono',monospace
+}
+.rstat-num{font-size:17px;font-weight:800;color:var(--violet-bright);font-variant-numeric:tabular-nums}
+.rstat-lbl{font-size:11px;color:var(--text-faded);text-transform:uppercase;letter-spacing:.06em}
+.preview-frame{animation:slideUp .55s .12s backwards}
+@keyframes slideUp{
+  from{opacity:0;transform:translateY(28px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* === TERMINAL LOADING LOG === */
+.status-bar.loading.term{
+  display:block;padding:0;align-items:initial;gap:0;
+  background:linear-gradient(180deg,rgba(8,12,20,.96),rgba(15,22,34,.96));
+  border:1px solid rgba(34,211,238,.28);
+  font-family:'JetBrains Mono',monospace;color:var(--cyan-bright);
+  overflow:hidden
+}
+.term-head{
+  display:flex;align-items:center;gap:7px;
+  padding:9px 14px;border-bottom:1px solid rgba(34,211,238,.15);
+  background:rgba(0,0,0,.32);font-size:12px
+}
+.term-head-dots{display:flex;gap:6px}
+.term-head-dots span{width:11px;height:11px;border-radius:50%}
+.term-head-dots span:nth-child(1){background:#ff5f56}
+.term-head-dots span:nth-child(2){background:#ffbd2e}
+.term-head-dots span:nth-child(3){background:#27c93f}
+.term-title{margin-left:10px;color:var(--text-faded);font-weight:500;letter-spacing:.02em}
+.term-clock{margin-left:auto;color:var(--amber);font-weight:700;font-variant-numeric:tabular-nums}
+.term-log{
+  padding:14px 16px;max-height:220px;overflow:hidden;
+  font-size:13px;line-height:1.75
+}
+.term-line{
+  opacity:0;color:var(--text-faded);
+  animation:termLineIn .35s forwards
+}
+@keyframes termLineIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+.term-arrow{color:var(--cyan-bright);margin-right:9px;font-weight:700}
+.term-line.live{color:var(--cyan-bright)}
+.term-line.done .term-arrow{color:var(--green)}
+.term-line.done .term-arrow::before{content:'✓ ';color:var(--green)}
+.term-cur{display:inline-block;margin-left:3px;color:var(--cyan-bright);animation:cur 1s steps(2) infinite}
+@keyframes cur{50%{opacity:0}}
+
+/* === REFINE === */
+.refine-cnt{
+  display:inline-block;margin-left:6px;padding:1px 7px;border-radius:9px;
+  background:rgba(255,255,255,.15);font-size:11px;font-weight:700;
+  font-family:'JetBrains Mono',monospace
+}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.refine-overlay{
+  display:none;position:fixed;inset:0;z-index:2000;
+  background:rgba(5,8,14,.78);backdrop-filter:blur(6px);
+  align-items:center;justify-content:center;padding:20px
+}
+.refine-overlay.show{display:flex}
+.refine-card{
+  position:relative;width:100%;max-width:520px;
+  background:linear-gradient(180deg,rgba(20,30,46,.97),rgba(15,22,34,.97));
+  border:1px solid var(--border-bright);border-radius:18px;
+  padding:28px 26px 24px;color:var(--text);
+  box-shadow:0 20px 60px rgba(0,0,0,.6)
+}
+.refine-close{
+  position:absolute;top:12px;right:14px;width:30px;height:30px;
+  background:transparent;border:0;color:var(--text-faded);
+  font-size:22px;cursor:pointer;line-height:1
+}
+.refine-close:hover{color:var(--text)}
+.refine-title{font-size:20px;font-weight:800;margin-bottom:6px}
+.refine-sub{color:var(--text-dim);font-size:14px;margin-bottom:14px;line-height:1.5}
+.refine-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+.refine-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.refine-chips-label{font-size:12px;color:var(--text-faded);width:100%;margin-bottom:2px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+.chip{
+  padding:6px 12px;border-radius:14px;
+  background:rgba(124,58,237,.1);border:1px solid var(--border);
+  color:var(--violet-bright);font-size:12px;font-family:inherit;
+  cursor:pointer;transition:all .15s
+}
+.chip:hover{background:rgba(124,58,237,.22);border-color:var(--violet-bright);transform:translateY(-1px)}
+.chip:active{transform:scale(.95)}
+
+/* === MICROINTERACTIONS === */
+.pill.sel,.age-pill.sel{animation:pop .32s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{0%{transform:scale(.92)}55%{transform:scale(1.08)}100%{transform:scale(1)}}
+.proj-card{transition:transform .25s cubic-bezier(.34,1.4,.64,1),border-color .2s,box-shadow .25s}
+.proj-card:hover{transform:translateY(-5px) scale(1.015)}
+.proj-card.sel{animation:pop .35s cubic-bezier(.34,1.56,.64,1)}
+.btn,.btn-next,.btn-back,.gen-btn{transition:transform .12s,background .15s,box-shadow .15s}
+.btn:active:not(:disabled),.btn-next:active,.btn-back:active,.gen-btn:active{transform:scale(.97)}
+.gen-btn:hover:not(:disabled){box-shadow:0 14px 38px rgba(124,58,237,.5)}
+.gen-btn:not(:disabled){animation:genGlow 2.6s ease-in-out infinite}
+@keyframes genGlow{
+  0%,100%{box-shadow:0 8px 24px rgba(124,58,237,.32)}
+  50%{box-shadow:0 8px 30px rgba(34,211,238,.42)}
+}
+.spin{
+  width:15px;height:15px;border:2px solid currentColor;border-top-color:transparent;
+  border-radius:50%;animation:sp .7s linear infinite;flex-shrink:0
+}
+@keyframes sp{to{transform:rotate(360deg)}}
+.gen-btn{
+  width:100%;padding:18px;font-size:16px;border-radius:14px;
+  background:linear-gradient(135deg,var(--violet),var(--cyan));
+  color:#fff;border:none;cursor:pointer;font-weight:800;font-family:inherit;
+  transition:all .2s;letter-spacing:-.01em;
+  box-shadow:0 8px 24px rgba(124,58,237,.3)
+}
+.gen-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 36px rgba(124,58,237,.5)}
+.gen-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* === STEPPER === */
+.stepper{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:40px}
+.step-item{display:flex;align-items:center}
+.step-dot{
+  width:32px;height:32px;border-radius:50%;
+  border:1.5px solid var(--border);
+  background:rgba(20,30,46,.6);
+  font-size:12px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text-faded);transition:all .25s;position:relative;z-index:1;
+  font-family:'JetBrains Mono',monospace
+}
+.step-dot.done{
+  background:linear-gradient(135deg,var(--violet),var(--cyan));
+  border-color:var(--violet-bright);color:#fff;
+  box-shadow:0 0 14px rgba(124,58,237,.5)
+}
+.step-dot.active{
+  background:rgba(20,30,46,.9);border-color:var(--cyan-bright);color:var(--cyan-bright);
+  box-shadow:0 0 0 4px rgba(6,182,212,.15)
+}
+.step-label{
+  font-size:10px;font-weight:500;color:var(--text-faded);position:absolute;top:38px;
+  white-space:nowrap;font-family:'JetBrains Mono',monospace;
+  letter-spacing:.08em;text-transform:uppercase
+}
+.step-wrap{position:relative;display:flex;flex-direction:column;align-items:center;padding-bottom:20px}
+.step-line{width:60px;height:1.5px;background:var(--border);transition:background .25s}
+.step-line.done{background:linear-gradient(90deg,var(--violet),var(--cyan))}
+
+/* === NAV === */
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:24px}
+.btn-back{
+  padding:10px 18px;border:1px solid var(--border);border-radius:10px;
+  background:rgba(20,30,46,.5);cursor:pointer;font-weight:500;font-size:13px;
+  font-family:inherit;color:var(--text-dim);transition:all .15s
+}
+.btn-back:hover{border-color:var(--border-bright);color:var(--text)}
+.btn-next{
+  padding:12px 28px;
+  background:linear-gradient(135deg,var(--violet),var(--cyan));
+  color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:700;
+  font-size:13px;font-family:inherit;transition:all .15s;letter-spacing:.02em;
+  box-shadow:0 4px 16px rgba(124,58,237,.3)
+}
+.btn-next:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(124,58,237,.5)}
+
+/* === RESULT === */
+.result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px}
+.result-header h2{font-size:24px;font-weight:800;letter-spacing:-.01em}
+.result-actions{display:flex;gap:8px;flex-wrap:wrap}
+.preview-frame{
+  width:100%;height:560px;
+  border:1px solid var(--border);border-radius:16px;
+  background:#fff;
+  box-shadow:0 12px 40px rgba(0,0,0,.4)
+}
+.code-toggle-row{margin-top:14px}
+.code-toggle-btn{
+  background:rgba(124,58,237,.1);border:1px solid var(--border);border-radius:10px;
+  color:var(--violet-bright);font-weight:500;cursor:pointer;font-size:13px;
+  font-family:'JetBrains Mono',monospace;padding:8px 14px;transition:all .15s
+}
+.code-toggle-btn:hover{background:rgba(124,58,237,.2);border-color:var(--border-bright)}
+.code-pre{
+  background:rgba(10,14,22,.9);color:#E8ECF4;
+  border:1px solid var(--border);border-radius:12px;
+  padding:20px;font-family:'JetBrains Mono',monospace;font-size:12px;
+  overflow:auto;max-height:320px;margin-top:10px;display:none;line-height:1.7
+}
+
+/* === OFFER POPUP === */
+.popup-overlay{
+  position:fixed;inset:0;background:rgba(5,8,16,.85);
+  display:none;align-items:center;justify-content:center;z-index:1000;
+  backdrop-filter:blur(10px);padding:20px;overflow-y:auto
+}
+.popup-overlay.show{display:flex;animation:fadeIn .3s ease}
+.popup-card{
+  background:var(--bg-2);
+  border:1px solid var(--border-bright);
+  border-radius:24px;max-width:560px;width:100%;
+  position:relative;overflow:hidden;
+  box-shadow:0 24px 80px rgba(124,58,237,.35),0 0 0 1px rgba(6,182,212,.1);
+  max-height:calc(100vh - 40px);overflow-y:auto
+}
+.confetti-canvas{position:absolute;inset:0;pointer-events:none;z-index:0;width:100%;height:320px}
+.popup-close{
+  position:absolute;top:14px;right:14px;width:32px;height:32px;border:none;
+  background:rgba(255,255,255,.1);border-radius:50%;cursor:pointer;font-size:18px;
+  display:flex;align-items:center;justify-content:center;color:var(--text);z-index:10;
+  transition:all .15s
+}
+.popup-close:hover{background:rgba(255,255,255,.2)}
+
+.pop-top{
+  background:linear-gradient(135deg,rgba(124,58,237,.6) 0%,rgba(236,72,153,.4) 50%,rgba(6,182,212,.5) 100%);
+  padding:40px 30px 32px;text-align:center;color:#fff;position:relative;
+  border-bottom:1px solid var(--border-bright)
+}
+.pop-top::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(168,85,247,.4) 0%,transparent 60%);
+  pointer-events:none
+}
+.pop-top-content{position:relative;z-index:1}
+.medal-ring{
+  width:92px;height:92px;margin:0 auto 16px;border-radius:50%;
+  background:linear-gradient(135deg,var(--amber),var(--red));
+  display:flex;align-items:center;justify-content:center;
+  font-size:44px;box-shadow:0 10px 32px rgba(245,158,11,.45);
+  border:4px solid rgba(255,255,255,.2)
+}
+.pop-title{
+  font-size:30px;font-weight:900;line-height:1.05;margin-bottom:8px;letter-spacing:-.02em;
+  background:linear-gradient(135deg,#fff 0%,#22D3EE 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text
+}
+.pop-greeting{font-size:15px;opacity:.95;font-weight:600;color:#fff}
+.pop-sub{font-size:13px;opacity:.85;margin-top:8px;line-height:1.5;color:#fff}
+
+.stats-row{display:flex;gap:10px;justify-content:center;padding:24px 24px 8px;flex-wrap:wrap}
+.stat-pill{
+  background:rgba(20,30,46,.6);
+  border:1px solid var(--border);border-radius:12px;
+  padding:12px 18px;text-align:center;flex:1;min-width:86px;max-width:120px
+}
+.stat-num{
+  font-size:26px;font-weight:900;display:block;line-height:1;
+  background:linear-gradient(135deg,var(--violet-bright),var(--cyan-bright));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  letter-spacing:-.02em
+}
+.stat-lbl{
+  font-size:10px;color:var(--text-faded);font-weight:500;margin-top:5px;display:block;
+  font-family:'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase
+}
+
+.badges-row{display:flex;gap:8px;justify-content:center;padding:14px 24px 0;flex-wrap:wrap}
+.badge{
+  display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:999px;
+  font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;
+  letter-spacing:.04em
+}
+.badge-purple{background:rgba(124,58,237,.14);color:var(--violet-bright);border:1px solid rgba(124,58,237,.3)}
+.badge-green{background:rgba(16,185,129,.14);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+.badge-yellow{background:rgba(245,158,11,.14);color:var(--amber);border:1px solid rgba(245,158,11,.3)}
+
+/* Offer card */
+.offer-card{
+  margin:22px;padding:26px 24px;
+  background:linear-gradient(135deg,rgba(245,158,11,.08) 0%,rgba(239,68,68,.05) 100%);
+  border:1px dashed rgba(245,158,11,.4);border-radius:18px;position:relative
+}
+.offer-stamp{
+  position:absolute;top:-12px;right:22px;
+  background:linear-gradient(135deg,var(--red),var(--amber));color:#fff;
+  padding:5px 14px;border-radius:999px;font-size:10px;font-weight:800;
+  letter-spacing:.18em;transform:rotate(3deg);font-family:'JetBrains Mono',monospace;
+  box-shadow:0 4px 14px rgba(239,68,68,.4)
+}
+.offer-header{
+  display:flex;align-items:center;gap:10px;margin-bottom:14px;
+  font-size:10px;font-weight:600;color:var(--amber);letter-spacing:.2em;text-transform:uppercase;
+  font-family:'JetBrains Mono',monospace
+}
+.offer-header::before,.offer-header::after{
+  content:'';flex:1;height:1px;background:rgba(245,158,11,.3)
+}
+.offer-title{
+  font-size:22px;font-weight:900;text-align:center;margin-bottom:8px;color:var(--text);line-height:1.2;
+  letter-spacing:-.01em
+}
+.offer-text{font-size:13px;text-align:center;color:var(--text-dim);line-height:1.6;margin-bottom:18px}
+.offer-benefits{list-style:none;padding:0;margin:0 0 18px;display:flex;flex-direction:column;gap:10px}
+.offer-benefits li{
+  display:flex;align-items:center;gap:12px;font-size:13.5px;font-weight:500;color:var(--text)
+}
+.offer-benefits li::before{
+  content:'✓';display:flex;align-items:center;justify-content:center;
+  width:22px;height:22px;
+  background:rgba(16,185,129,.14);color:var(--green);
+  border:1px solid rgba(16,185,129,.35);
+  border-radius:6px;font-size:13px;font-weight:700;flex-shrink:0
+}
+
+.popup-btns{padding:0 22px 26px;display:flex;gap:10px;flex-direction:column}
+.popup-btn-main{
+  padding:16px 24px;
+  background:linear-gradient(135deg,var(--red),var(--amber));
+  color:#fff;border:none;border-radius:12px;cursor:pointer;
+  font-weight:800;font-size:15px;font-family:inherit;transition:all .2s;letter-spacing:.01em;
+  box-shadow:0 8px 24px rgba(239,68,68,.3)
+}
+.popup-btn-main:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(239,68,68,.5)}
+.popup-btn-sec{
+  padding:13px 20px;background:rgba(20,30,46,.6);color:var(--text-dim);
+  border:1px solid var(--border);border-radius:12px;cursor:pointer;
+  font-weight:500;font-size:13px;font-family:inherit;transition:all .15s
+}
+.popup-btn-sec:hover{border-color:var(--border-bright);color:var(--text)}
+
+/* === LANDING MODAL === */
+.offer-land-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1100;
+  display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(12px)
+}
+.offer-land-overlay.show{display:flex;animation:fadeIn .3s ease}
+.offer-land{
+  background:var(--bg-2);
+  border:1px solid var(--border-bright);
+  border-radius:24px;max-width:640px;width:100%;
+  padding:44px 40px;text-align:center;position:relative;
+  max-height:calc(100vh - 40px);overflow-y:auto;
+  box-shadow:0 24px 80px rgba(124,58,237,.4)
+}
+.offer-land h1{font-size:34px;font-weight:900;margin-bottom:12px;line-height:1.1;letter-spacing:-.02em}
+.offer-land h1 span{
+  background:linear-gradient(135deg,#fff 0%,#A855F7 60%,#22D3EE 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text
+}
+.offer-land .tagline{font-size:15px;color:var(--text-dim);margin-bottom:28px;line-height:1.55}
+.offer-land-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:28px;text-align:left}
+.offer-feat{
+  background:var(--glass);
+  border:1px solid var(--border);border-radius:14px;
+  padding:16px 18px;transition:all .2s
+}
+.offer-feat:hover{border-color:var(--border-bright);transform:translateY(-2px)}
+.offer-feat-emoji{font-size:24px;display:block;margin-bottom:8px}
+.offer-feat-title{font-weight:700;font-size:14px;margin-bottom:4px;color:var(--text)}
+.offer-feat-desc{font-size:12.5px;color:var(--text-dim);line-height:1.5}
+.offer-land-cta{
+  display:inline-block;padding:16px 40px;
+  background:linear-gradient(135deg,var(--violet),var(--cyan));color:#fff;
+  border:none;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;
+  font-family:inherit;transition:all .2s;letter-spacing:-.01em;
+  box-shadow:0 10px 30px rgba(124,58,237,.35)
+}
+.offer-land-cta:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(124,58,237,.55)}
+.offer-land-close{
+  position:absolute;top:14px;right:14px;width:34px;height:34px;border:none;
+  background:rgba(255,255,255,.08);border-radius:50%;cursor:pointer;font-size:18px;
+  color:var(--text-dim);transition:all .15s
+}
+.offer-land-close:hover{background:rgba(255,255,255,.16);color:var(--text)}
+
+.land-foot{
+  margin-top:18px;font-size:11px;color:var(--text-faded);
+  letter-spacing:.08em;font-family:'JetBrains Mono',monospace;text-transform:uppercase
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 720px){
+  header{padding:12px 18px;flex-wrap:wrap;gap:8px}
+  .api-input{width:140px}
+  .logo{font-size:17px}
+  .entry-card{padding:32px 24px}
+  .entry-card h1{font-size:28px}
+  .screen-header h2{font-size:24px}
+  .projects-grid{grid-template-columns:1fr}
+  .offer-land-grid{grid-template-columns:1fr}
+  .step-line{width:30px}
+  .step-label{font-size:9px}
+  .wrap{padding:28px 18px 60px}
+  .preview-frame{height:420px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">◆ Школа Вайбкодеров</div>
+  <div class="header-right">
+    <div class="user-badge" id="userBadge">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div style="display:flex;flex-direction:column;line-height:1.2">
+        <span class="user-name" id="userName">—</span>
+        <span class="user-tag">СТАЖЁР</span>
+      </div>
+    </div>
+    <input type="password" class="api-input" id="apiKey" placeholder="API ключ sk-ant-… (обязательно)">
+    <button class="btn btn-ghost" onclick="saveKey()">Сохранить</button>
+    <span class="key-saved" id="keySaved">✓</span>
+  </div>
+</header>
+
+<!-- ══════════ SCREEN: ENTRY ══════════ -->
+<div class="screen active" id="s-entry">
+  <div class="entry-screen">
+    <div class="entry-card">
+      <div class="entry-stamp">Step 1 · Подача заявки</div>
+      <h1>Добро пожаловать в<br><span>Школу Вайбкодеров</span></h1>
+      <p class="lead">Ты стажёр. Задача дня — собрать первый рабочий проект.<br>Готов? Заполни бейдж.</p>
+
+      <div class="entry-block">
+        <label>Как тебя зовут?</label>
+        <input type="text" class="name-input" id="entryName" placeholder="Например: Никита" maxlength="20" autocomplete="off">
+      </div>
+
+      <div class="entry-block">
+        <label>Сколько тебе лет?</label>
+        <div class="age-pills" id="agePills">
+          <button class="age-pill" onclick="pickAge(11,this)">11<small>лет</small></button>
+          <button class="age-pill" onclick="pickAge(12,this)">12<small>лет</small></button>
+          <button class="age-pill" onclick="pickAge(13,this)">13<small>лет</small></button>
+          <button class="age-pill" onclick="pickAge(14,this)">14<small>лет</small></button>
+          <button class="age-pill" onclick="pickAge(15,this)">15<small>лет</small></button>
+          <button class="age-pill" onclick="pickAge(16,this)">16+<small>лет</small></button>
+        </div>
+      </div>
+
+      <button class="entry-submit" id="entrySubmit" onclick="submitEntry()" disabled>
+        Начать стажировку →
+      </button>
+      <div class="entry-foot">↳ За прохождение — офер в Школу</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN: PROJECT ══════════ -->
+<div class="screen" id="s-project">
+  <div class="wrap">
+    <div class="stepper" id="stepper"></div>
+    <div class="screen-header">
+      <span class="eyebrow">шаг 1 · выбор проекта</span>
+      <h2 id="proj-title">Что будем создавать?</h2>
+      <p id="proj-sub"></p>
+    </div>
+    <div class="projects-grid" id="proj-grid"></div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goScreen('s-entry')">← Назад</button>
+      <button class="btn-next" onclick="goToCustomize()">Дальше →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN: CUSTOMIZE ══════════ -->
+<div class="screen" id="s-customize">
+  <div class="wrap">
+    <div class="stepper" id="stepper2"></div>
+    <div class="screen-header">
+      <span class="eyebrow">шаг 2 · настройка</span>
+      <h2>Настрой свой проект</h2>
+      <p>Выбери варианты — ИИ учтёт всё это</p>
+    </div>
+    <div class="customize-card" id="cust-questions"></div>
+    <div class="status-bar" id="statusBar"></div>
+    <button class="gen-btn" id="genBtn" onclick="generate()">✨ Создать проект</button>
+    <div class="nav-row" style="margin-top:14px">
+      <button class="btn-back" onclick="goScreen('s-project')">← Назад</button>
+      <span></span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN: RESULT ══════════ -->
+<div class="screen" id="s-result">
+  <div class="wrap">
+    <div class="result-header">
+      <h2>◆ Твоё приложение готово</h2>
+      <div class="result-actions">
+        <button class="btn btn-primary" id="refineDeepBtn" onclick="refine('deep')">🔧 Доработать <span class="refine-cnt" id="refineCntDeep">3</span></button>
+        <button class="btn btn-ghost" id="refineSmallBtn" onclick="refine('small')">✏ Мелкая правка <span class="refine-cnt" id="refineCntSmall">3</span></button>
+        <button class="btn btn-ghost" onclick="downloadHTML()">↓ Скачать</button>
+        <button class="btn btn-ghost" onclick="openFull()">⛶ На весь экран</button>
+        <button class="btn btn-ghost" onclick="goScreen('s-customize')">↻ Пересобрать</button>
+      </div>
+    </div>
+    <div class="result-hero" id="resultHero">
+      <div class="result-hero-title" id="resultHeroTitle">✨ Готово</div>
+      <div class="result-hero-stats">
+        <div class="rstat"><span class="rstat-num" id="rstatLines">0</span><span class="rstat-lbl">строк</span></div>
+        <div class="rstat"><span class="rstat-num" id="rstatSec">0</span><span class="rstat-lbl">секунд</span></div>
+        <div class="rstat"><span class="rstat-num" id="rstatKb">0</span><span class="rstat-lbl">КБ</span></div>
+      </div>
+    </div>
+    <div class="result-warn" id="resultWarn"></div>
+    <iframe class="preview-frame" id="previewFrame" sandbox="allow-scripts allow-forms allow-modals"></iframe>
+    <div class="code-toggle-row">
+      <button class="code-toggle-btn" onclick="toggleCode()">&lt;/&gt; Посмотреть код ↓</button>
+      <pre class="code-pre" id="codePre"></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL: REFINE ══════════ -->
+<div class="refine-overlay" id="refineModal">
+  <div class="refine-card">
+    <button class="refine-close" onclick="closeRefine()">×</button>
+    <h3 class="refine-title" id="refineTitle">Доработать проект</h3>
+    <p class="refine-sub" id="refineSub">Опиши, что переделать.</p>
+    <div class="refine-chips" id="refineChips"></div>
+    <textarea class="textarea" id="refineInput" placeholder="Например: пусть герой стреляет, добавь больше платформ, поменяй цвет фона на оранжевый…"></textarea>
+    <div class="refine-actions">
+      <button class="btn btn-ghost" onclick="closeRefine()">Отмена</button>
+      <button class="btn btn-primary" onclick="submitRefine()">✨ Применить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═════════════════════════════════
+// EMBED FLAG — выставляется до layout, чтобы CSS-правила .embed применились
+// и body/entry-screen не залипли на min-height:100vh внутри Tilda-iframe.
+// ═════════════════════════════════
+if (window.parent !== window) document.documentElement.classList.add('embed')
+
+// ═════════════════════════════════
+// CONFIG — прямой вызов Anthropic API из браузера.
+// Бэкенд не требуется: ключ ребёнка из шапки идёт напрямую в api.anthropic.com.
+// За CORS отвечает заголовок anthropic-dangerous-direct-browser-access.
+// ═════════════════════════════════
+const ANTHROPIC_URL   = 'https://api.anthropic.com/v1/messages'
+const ANTHROPIC_MODEL = 'claude-sonnet-4-6'
+
+// ═════════════════════════════════
+// STATE
+// ═════════════════════════════════
+const S = {
+  name: '', age: 0, level: 1,
+  project: null, answers: {},
+  html: '', genSec: 0, genStart: 0, edits: 0
+}
+
+// ═════════════════════════════════
+// CONFIGS
+// ═════════════════════════════════
+const LEVELS = {
+  1: { title: 'Два проекта для первого раза', sub: 'Простое, но рабочее 🌱', projects: ['catch-game','my-page'] },
+  2: { title: 'Серьёзные проекты', sub: 'Настоящий код и механики 🔥', projects: ['platformer','cool-site'] }
+}
+
+// Общие правила, добавляются в каждый system-промт.
+// Цель — снизить шанс ReferenceError / битой разметки и не плодить мёртвых фич.
+const BASE_RULES = `ОБЩИЕ ПРАВИЛА (соблюдать строго):
+- Один HTML-файл. Весь CSS внутри <style>, весь JS — в одном <script> в конце <body>.
+- Никаких внешних библиотек, кроме fonts.googleapis.com. Никаких CDN, npm, jQuery.
+- Никаких внешних картинок. Только emoji, CSS-градиенты, inline SVG.
+- Все обработчики событий — через addEventListener. Никаких onclick="…" в HTML.
+- Каждый getElementById/querySelector ссылается на ID/класс, который РЕАЛЬНО есть в HTML.
+- Все функции и переменные объявлены до использования. Никаких ReferenceError.
+- Игровой/прикладной код запускается на DOMContentLoaded или в скрипте внизу <body>.
+- Лучше меньше фич, но всё работает, чем много фич с багами.
+
+ПЕРЕД ВЫВОДОМ МЫСЛЕННО ПРОВЕРЬ:
+1. Все ID, к которым обращается JS, реально есть в HTML?
+2. Все функции, которые вызываются — объявлены?
+3. Код запустится с первой попытки без ошибок в консоли?
+4. То, что обещано в ТЗ, действительно работает (а не пустой каркас)?
+
+ФОРМАТ ВЫВОДА: только чистый HTML — без markdown, без \`\`\`, без объяснений.
+Начни с <!DOCTYPE html>, заверши </html>.`
+
+const PROJECTS = {
+  'catch-game': {
+    emoji:'🎮', label:'Простая игра', ageTag:'11–12', tagClass:'tag-green',
+    desc:'Персонаж двигается мышью, собирает хорошее и уклоняется от плохого. Очки, жизни, нарастающая сложность.',
+    questions:[
+      {q:'Кто главный герой?',sub:'Кем управляешь мышью',k:'hero',
+        opts:['🚀 Ракета','🐱 Котик','🧙 Волшебник','🦊 Лиса','👾 Пришелец','🤖 Робот','🦸 Супергерой','🐉 Дракон']},
+      {q:'Что он собирает?',sub:'За это дают очки',k:'collect',
+        opts:['⭐ Звёзды','💎 Кристаллы','🍕 Пиццу','🪙 Монеты','🎁 Подарки','🍎 Яблоки','⚡ Энергию','🌸 Цветы']},
+      {q:'Чего избегает?',sub:'Касание = -1 жизнь',k:'avoid',
+        opts:['☄️ Астероиды','💣 Бомбы','🔥 Огонь','⚡ Молнии','👻 Призраки','🌊 Волны','🪨 Камни','🦠 Вирусы']},
+      {q:'Где происходит действие?',sub:'Атмосфера и фон',k:'world',
+        opts:['🌌 Космос','🌊 Океан','🌲 Лес','🏙️ Мегаполис','🍄 Грибной мир','❄️ Арктика','🌋 Вулкан','🏜️ Пустыня']}
+    ],
+    system:(s)=>`Ты — разработчик HTML5-игр. Сделай маленькую, но рабочую аркадную игру.
+
+ПАРАМЕТРЫ ОТ ИГРОКА:
+- Герой: ${s.hero||'персонаж'} — двигается мышью по горизонтали (mousemove)
+- Собирает: ${s.collect||'предметы'} (+10 очков)
+- Избегает: ${s.avoid||'препятствия'} (-1 жизнь)
+- Мир/фон: ${s.world||'фантастический'}
+
+КЛЮЧЕВЫЕ МЕХАНИКИ (одна игра, без лишних режимов):
+- Canvas 600×450, по центру; фон — CSS-градиент в стиле мира
+- Сверху случайно падают 2 типа объектов (бонус и опасность); все — emoji через ctx.fillText
+- HUD в углу: счёт и 3 жизни ❤️❤️❤️
+- Скорость падения растёт постепенно (например +10% каждые 15 секунд)
+- Game Over экран: финальный счёт + крупная кнопка «Играть снова», полный рестарт
+- Игровой цикл — requestAnimationFrame, init() запускается на DOMContentLoaded`
+  },
+  'my-page': {
+    emoji:'🌐', label:'Моя страница', ageTag:'11–12', tagClass:'tag-green',
+    desc:'Личный мини-сайт: кто ты, чем увлекаешься. Красивые карточки и анимации!',
+    questions:[
+      {q:'Твоё главное увлечение?',sub:'Основная тема',k:'hobby',opts:['🎮 Игры','🎨 Рисование','⚽ Спорт','🎵 Музыка','📚 Книги','🔬 Наука','🎬 Кино','✈️ Путешествия']},
+      {q:'Стиль страницы?',sub:'Как должна выглядеть',k:'style',opts:['🌙 Тёмный крутой','☀️ Светлый яркий','🌸 Нежный розовый','🔥 Огненный','🌊 Морской','🌿 Природный','💎 Премиальный','🌈 Радужный']},
+      {q:'Главный цвет акцента?',sub:'Кнопки и детали',k:'color',opts:['💜 Фиолетовый','💙 Синий','💚 Зелёный','🧡 Оранжевый','💗 Розовый','⚫ Чёрный','🔴 Красный','💛 Жёлтый']},
+      {q:'Самое важное на странице?',sub:'Что выделить',k:'focus',opts:['🏆 Достижения','🎮 Любимые игры','🎬 Топ фильмов','💭 Мечты','🎯 Проекты','🎵 Плейлист','📸 Галерея','✍️ Мои мысли']}
+    ],
+    system:(s)=>`Ты — UI-дизайнер. Сделай аккуратную одностраничную визитку для подростка.
+
+ПАРАМЕТРЫ:
+- Увлечение: ${s.hobby||'разное'}
+- Стиль: ${s.style||'современный'}
+- Цвет акцента: ${s.color||'фиолетовый'} (использовать строго его)
+- Главный блок: ${s.focus||'обо мне'}
+
+КЛЮЧЕВЫЕ БЛОКИ (минимум, но всё рабочее):
+- Hero: имя/ник пользователя + короткий слоган про «${s.hobby||'разное'}»
+- 3 карточки об увлечении (emoji + строка описания); hover: scale(1.04) + тень
+- Секция «${s.focus||'обо мне'}» с 3 элементами
+- Маленький футер с одной цитатой
+
+ВИЗУАЛ:
+- Один шрифт из Google Fonts, подобранный под стиль «${s.style||'?'}» (например Bebas Neue / Caveat / Unbounded / Press Start 2P)
+- Fade-in появление блоков при загрузке через CSS @keyframes`
+  },
+  'platformer': {
+    emoji:'🕹️', label:'Платформер', ageTag:'13–15', tagClass:'tag-yellow',
+    desc:'Герой прыгает по платформам, собирает монеты, уничтожает врагов. Физика, двойной прыжок.',
+    questions:[
+      {q:'Жанр и атмосфера?',sub:'Задаёт всё остальное',k:'genre',opts:['🧙 Тёмное фэнтези','🤖 Киберпанк','🌿 Приключение','🌌 Sci-Fi','☠️ Хоррор','🌈 Аркадный яркий','🏔️ Дикая природа','🌊 Подводный мир']},
+      {q:'Главный герой?',sub:'Персонаж игрока',k:'char',opts:['🦊 Ловкий зверёк','⚔️ Рыцарь','🧙 Маг','🤖 Боевой робот','👽 Пришелец','🧑‍💻 Хакер','🦸 Супергерой','🐉 Маленький дракон']},
+      {q:'Особая механика?',sub:'Уникальная способность',k:'mechanic',opts:['💨 Рывок (dash)','🔮 Стрельба снарядами','🛡️ Отражение атак','🌀 Телепортация','⏰ Замедление времени','🔥 Огненный след','❄️ Заморозка','⚡ Молниевый удар']},
+      {q:'Цель уровня?',sub:'Как побеждаешь',k:'goal',opts:['🚪 Добраться до выхода','👑 Победить босса','💎 Собрать все кристаллы','🔑 Найти ключ','🌟 Зажечь 3 маяка','🏁 Финишная черта','💀 Уничтожить всех','🗝️ Открыть тайник']}
+    ],
+    system:(s)=>`Ты — разработчик игр. Сделай простой, но играбельный платформер на HTML5 Canvas.
+
+ПАРАМЕТРЫ:
+- Жанр/атмосфера: ${s.genre||'приключение'}
+- Герой: ${s.char||'персонаж'} (рисуется как emoji через ctx.fillText)
+- Особая механика: ${s.mechanic||'прыжок'}
+- Цель уровня: ${s.goal||'добраться до выхода'}
+
+КЛЮЧЕВЫЕ МЕХАНИКИ (один экран, один уровень — но рабочий):
+- Canvas 720×420; фон — CSS-градиент в стиле жанра «${s.genre||'?'}»
+- Управление: ←/→ или A/D — движение; Space или ↑ — прыжок (двойной разрешён)
+- Гравитация ~0.5, простая коллизия с платформами, горизонтальное трение
+- 5 платформ, одна из них движется туда-сюда
+- 5 монет (+10 очков), 1 враг патрулирует по платформе (касание = -1 жизнь)
+- 3 жизни; HUD со счётом и жизнями; экран Game Over с кнопкой «Заново»
+- Особая механика «${s.mechanic||'прыжок'}» — реализуй явно (например dash = двойной тап в направлении)
+- Никаких меню, заставок, звуков, параллакса — игра запускается сразу при загрузке`
+  },
+  'cool-site': {
+    emoji:'💜', label:'Крутой лендинг', ageTag:'13–15', tagClass:'tag-yellow',
+    desc:'Портфолио, стартап или проект: анимации при скролле, современный дизайн, мобильная версия.',
+    questions:[
+      {q:'Тип проекта?',sub:'О чём лендинг',k:'type',opts:['🎮 Игра','🎨 Портфолио','🚀 Стартап','🎵 Музпроект','🌍 Соц. идея','🤖 AI-проект','🐾 Помощь животным','🍕 Кафе']},
+      {q:'Аудитория?',sub:'Для кого',k:'audience',opts:['👦 Ровесники','🎮 Геймеры','🎨 Творческие','💼 Взрослые','🌍 Все','👨‍👩‍👧 Семьи','🧑‍💻 Разработчики','📱 Соцсети']},
+      {q:'Стиль?',sub:'Визуальный характер',k:'style',opts:['⚫ Тёмный минимализм','🌈 Яркий дерзкий','🌸 Мягкий нежный','💎 Премиальный','🌿 Экологичный','🔥 Агрессивный','☁️ Воздушный','🎨 Художественный']},
+      {q:'Главная фишка?',sub:'Что запомнится',k:'feature',opts:['✨ Анимации','📊 Цифры','🖼️ Галерея','💬 Отзывы','🎬 Видео-фон','⚡ Интерактив','🎁 Бесплатный доступ','📱 Mobile-first']}
+    ],
+    system:(s)=>`Ты — фронтенд-разработчик. Сделай чистый одностраничный лендинг.
+
+ПАРАМЕТРЫ:
+- Тип проекта: ${s.type||'стартап'}
+- Аудитория: ${s.audience||'все'}
+- Стиль: ${s.style||'современный'} (визуал строго в нём)
+- Главная фишка: ${s.feature||'анимации'}
+
+КЛЮЧЕВЫЕ БЛОКИ (минимум, без ритуального мусора):
+- Sticky-навбар: название проекта + 3 ссылки-якоря на секции
+- Hero: заголовок, подзаголовок, одна крупная CTA-кнопка
+- 3 карточки «Особенности» (emoji + заголовок + описание); hover-эффект
+- Секция «${s.feature||'фишка'}» — главный смысловой блок
+- Минимальный футер с одной строкой контактов
+
+ВИЗУАЛ:
+- Один шрифт из Google Fonts под стиль «${s.style||'?'}»
+- Fade-in при скролле через IntersectionObserver
+- scroll-behavior: smooth для якорей
+- Без бургер-меню, без формы контактов, без блока «отзывы» — проще = надёжнее`
+  }
+}
+
+// ═════════════════════════════════
+// ENTRY SCREEN
+// ═════════════════════════════════
+document.getElementById('entryName').addEventListener('input', validateEntry)
+document.getElementById('apiKey').addEventListener('input', () => {
+  const k = document.getElementById('apiKey').value.trim()
+  if (hasValidKey(k)) {
+    sessionStorage.setItem('ck', k)
+    document.getElementById('apiKey').classList.remove('missing')
+  }
+  validateEntry()
+})
+
+function hasValidKey(k) {
+  return typeof k === 'string' && k.trim().startsWith('sk-ant-') && k.trim().length > 20
+}
+
+// Превращает ошибку Anthropic в человекочитаемое сообщение для ребёнка.
+function humanizeAnthropicError(status, body) {
+  let msg = ''
+  try { msg = JSON.parse(body).error?.message || '' } catch {}
+  const lower = (msg + ' ' + body).toLowerCase()
+  if (status === 401)                                return '🔑 API-ключ невалидный. Проверь, что вставил полностью.'
+  if (status === 429)                                return '⏳ Anthropic просит подождать (rate limit). Попробуй через 30 секунд.'
+  if (status === 400 && /credit|balance/.test(lower)) return '💳 На аккаунте нет средств. Пополни баланс на console.anthropic.com.'
+  if (status === 529 || status === 503)              return '🛠 Anthropic временно недоступен. Попробуй через минуту.'
+  return `❌ ${msg || `HTTP ${status}`}`
+}
+
+function pickAge(age, btn) {
+  S.age = age
+  document.querySelectorAll('.age-pill').forEach(p => p.classList.remove('sel'))
+  btn.classList.add('sel')
+  validateEntry()
+}
+
+function validateEntry() {
+  const name = document.getElementById('entryName').value.trim()
+  const key  = document.getElementById('apiKey').value.trim() || sessionStorage.getItem('ck') || ''
+  const ok = name.length >= 2 && S.age > 0 && hasValidKey(key)
+  document.getElementById('entrySubmit').disabled = !ok
+}
+
+function submitEntry() {
+  const name = document.getElementById('entryName').value.trim()
+  const key  = document.getElementById('apiKey').value.trim() || sessionStorage.getItem('ck') || ''
+  if (!hasValidKey(key)) {
+    const inp = document.getElementById('apiKey')
+    inp.classList.remove('missing'); void inp.offsetWidth; inp.classList.add('missing')
+    inp.focus()
+    return
+  }
+  if (name.length < 2 || !S.age) return
+  S.name = name
+  S.level = S.age <= 12 ? 1 : 2
+
+  // show user badge
+  document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase()
+  document.getElementById('userName').textContent = name
+  document.getElementById('userBadge').classList.add('show')
+
+  // load projects for level
+  const cfg = LEVELS[S.level]
+  document.getElementById('proj-title').textContent = cfg.title
+  document.getElementById('proj-sub').textContent = cfg.sub
+  const grid = document.getElementById('proj-grid')
+  grid.innerHTML = cfg.projects.map(id => {
+    const p = PROJECTS[id]
+    return `<div class="proj-card" id="pc-${id}" onclick="selectProject('${id}')">
+      <span class="age-tag ${p.tagClass}">${p.ageTag}</span>
+      <span class="emo">${p.emoji}</span>
+      <h3>${p.label}</h3>
+      <p>${p.desc}</p>
+    </div>`
+  }).join('')
+
+  renderStepper('stepper', 1)
+  goScreen('s-project')
+}
+
+// ═════════════════════════════════
+// NAVIGATION
+// ═════════════════════════════════
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
+  document.getElementById(id).classList.add('active')
+  window.scrollTo(0, 0)
+  if (window.__vibeEmbed) {
+    window.__vibeEmbed.sendScrollTop()
+    requestAnimationFrame(window.__vibeEmbed.sendHeight)
+  }
+}
+
+function renderStepper(containerId, step) {
+  const steps = ['Проект','Настройка','Готово']
+  const el = document.getElementById(containerId)
+  if (!el) return
+  el.innerHTML = steps.map((lbl, i) => {
+    const n = i + 1
+    const cls = n < step ? 'done' : n === step ? 'active' : ''
+    const line = i < steps.length - 1 ? `<div class="step-line${n < step ? ' done' : ''}"></div>` : ''
+    return `<div class="step-item"><div class="step-wrap"><div class="step-dot ${cls}">${n < step ? '✓' : n}</div><span class="step-label">${lbl}</span></div>${line}</div>`
+  }).join('')
+}
+
+function selectProject(id) {
+  S.project = id
+  S.answers = {}
+  document.querySelectorAll('.proj-card').forEach(c => c.classList.remove('sel'))
+  document.getElementById('pc-' + id)?.classList.add('sel')
+}
+
+function goToCustomize() {
+  if (!S.project) { alert('Выбери тип проекта!'); return }
+  renderStepper('stepper2', 2)
+  renderQuestions()
+  goScreen('s-customize')
+}
+
+// ═════════════════════════════════
+// CUSTOMIZE
+// ═════════════════════════════════
+function renderQuestions() {
+  const proj = PROJECTS[S.project]
+  const container = document.getElementById('cust-questions')
+  container.innerHTML = proj.questions.map((q, qi) => `
+    <div class="cust-q">
+      <div class="q-label">
+        <span class="q-num">${qi + 1}</span>
+        ${q.q} <span class="q-sub">— ${q.sub}</span>
+      </div>
+      <div class="pills" id="pills-${qi}">
+        ${q.opts.map(opt => `<button class="pill" onclick="pickAnswer(${qi},'${opt.replace(/'/g,"\\'")}',this)">${opt}</button>`).join('')}
+      </div>
+    </div>
+  `).join('')
+}
+
+function pickAnswer(qi, val, btn) {
+  const proj = PROJECTS[S.project]
+  const key = proj.questions[qi].k
+  S.answers[key] = val
+  document.querySelectorAll(`#pills-${qi} .pill`).forEach(b => b.classList.remove('sel'))
+  btn.classList.add('sel')
+}
+
+document.getElementById('genBtn').onclick = () => {
+  const proj = PROJECTS[S.project]
+  const missing = proj.questions.filter(q => !S.answers[q.k])
+  if (missing.length > 0) {
+    alert(`Ответь на все вопросы! Осталось: ${missing.map(q => q.q).join(', ')}`)
+    return
+  }
+  generate()
+}
+
+// ═════════════════════════════════
+// API KEY
+// ═════════════════════════════════
+window.addEventListener('load', () => {
+  const k = sessionStorage.getItem('ck')
+  if (k) document.getElementById('apiKey').value = k
+})
+function saveKey() {
+  const k = document.getElementById('apiKey').value.trim()
+  if (!k) return
+  sessionStorage.setItem('ck', k)
+  const el = document.getElementById('keySaved')
+  el.classList.add('show')
+  setTimeout(() => el.classList.remove('show'), 2000)
+}
+
+// ═════════════════════════════════
+// GENERATE
+// ═════════════════════════════════
+async function generate() {
+  const key = (document.getElementById('apiKey').value.trim() || sessionStorage.getItem('ck') || '').trim()
+  if (!hasValidKey(key)) {
+    setStatus('error', '❌ Вставь свой Anthropic API-ключ (sk-ant-…) в шапке справа')
+    document.getElementById('apiKey').classList.add('missing')
+    return
+  }
+
+  const proj = PROJECTS[S.project]
+  const msg = [
+    `Автор проекта: ${S.name} (${S.age} лет)`,
+    Object.entries(S.answers).map(([k,v]) => `${k}: ${v}`).join(', ')
+  ].join('\n')
+
+  setStatus('loading', '')
+  document.getElementById('genBtn').disabled = true
+  S.genStart = Date.now()
+
+  try {
+    const res = await fetch(ANTHROPIC_URL, {
+      method: 'POST',
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 16000,
+        system: proj.system(S.answers) + `\n\n${BASE_RULES}\n\n<frontend_aesthetics>\nИзбегай шаблонных AI-паттернов: банальные шрифты (Inter, Roboto, Arial), клише цветовые схемы (особенно фиолетовые градиенты на белом), предсказуемые layout-паттерны. Используй уникальные шрифты из Google Fonts, цельную цветовую тему, анимации и микро-интеракции. Сделай дизайн неожиданным и запоминающимся — специфичным под тему проекта.\n</frontend_aesthetics>`,
+        messages: [{ role: 'user', content: msg }]
+      })
+    })
+
+    if (!res.ok) {
+      const txt = await res.text()
+      console.error('[Claude API error]', res.status, txt)
+      throw new Error(humanizeAnthropicError(res.status, txt))
+    }
+
+    const data = await res.json()
+    if (data.stop_reason === 'max_tokens') {
+      throw new Error('Ответ обрезан по лимиту токенов — попробуй сгенерировать ещё раз (или упрости описание)')
+    }
+    let code = data.content[0].text
+    const m = code.match(/```(?:html)?\n?([\s\S]*?)```/i)
+    if (m) code = m[1].trim()
+
+    S.html = code
+    S.genSec = Math.round((Date.now() - S.genStart) / 1000)
+    setStatus('', '')
+
+    document.getElementById('previewFrame').srcdoc = code
+    document.getElementById('codePre').textContent = code
+    S.edits = 0
+    updateRefineCounter()
+    goScreen('s-result')
+    revealResult(code)
+
+    // Лёгкая проверка сгенерированного HTML — не блокирует UX,
+    // просто показывает мягкое предупреждение, если что-то явно сломано.
+    validateGenerated(code).then(showValidationResult)
+
+  } catch (e) {
+    console.error('[generate]', e)
+    const _em = e.message || e.name || 'network error'
+    setStatus('error', /^\p{Emoji}/u.test(_em) ? _em : `❌ ${_em}`)
+  } finally {
+    document.getElementById('genBtn').disabled = false
+  }
+}
+
+// ═════════════════════════════════
+// TERMINAL-СТАЙЛ ЛОГ ЗАГРУЗКИ
+// ═════════════════════════════════
+// Пока модель пишет код, показываем поддельный, но осмысленный «build log».
+// Строки специфичны под тип проекта и параметры — благодаря интерполяции
+// `{hero}` / `{world}` / `{style}` ребёнок видит свои выборы в логе.
+const TERM_LINES = {
+  'catch-game': [
+    'парсинг темы «{world}»',
+    'инициализация canvas 600×450',
+    'рисую героя {hero}',
+    'размещаю {collect} как бонусы',
+    'программирую {avoid} как опасности',
+    'настраиваю физику падения',
+    'подключаю обработчик мыши',
+    'считаю систему очков',
+    'рисую HUD с жизнями',
+    'настраиваю прогрессию сложности',
+    'делаю экран Game Over',
+    'оптимизирую requestAnimationFrame',
+    'проверяю баланс игры',
+    'финальная полировка'
+  ],
+  'my-page': [
+    'анализирую стиль «{style}»',
+    'подбираю шрифт из Google Fonts',
+    'выбираю палитру под {color}',
+    'верстаю hero-секцию',
+    'рисую карточки про {hobby}',
+    'настраиваю hover-эффекты',
+    'программирую fade-in анимации',
+    'верстаю блок «{focus}»',
+    'добавляю микро-интеракции',
+    'проверяю мобильный вид',
+    'финальная полировка'
+  ],
+  'platformer': [
+    'набрасываю мир «{genre}»',
+    'инициализация canvas 720×420',
+    'рисую {char}',
+    'программирую гравитацию и трение',
+    'настраиваю двойной прыжок',
+    'расставляю 5 платформ',
+    'делаю одну платформу движущейся',
+    'размещаю монеты',
+    'программирую механику «{mechanic}»',
+    'добавляю врага и патрулирование',
+    'настраиваю систему жизней',
+    'делаю экран Game Over',
+    'оптимизирую коллизии',
+    'финальная полировка'
+  ],
+  'cool-site': [
+    'анализирую тип «{type}»',
+    'подбираю палитру под {style}',
+    'подключаю Google Fonts',
+    'верстаю sticky-навбар',
+    'делаю hero с CTA',
+    'рисую карточки особенностей',
+    'верстаю акцентный блок «{feature}»',
+    'настраиваю IntersectionObserver',
+    'добавляю плавный scroll',
+    'проверяю responsive',
+    'финальная полировка'
+  ]
+}
+
+const REFINE_HINTS = {
+  'catch-game': {
+    deep:  ['добавь босса в конце','сделай 3 уровня сложности','добавь power-up','поменяй мир целиком'],
+    small: ['ускори игру','сделай героя крупнее','поменяй цвет фона','добавь больше жизней']
+  },
+  'my-page': {
+    deep:  ['переделай в другом стиле','добавь раздел проектов','поменяй структуру блоков'],
+    small: ['сделай шрифт крупнее','поменяй цвет акцента','добавь ещё одну карточку']
+  },
+  'platformer': {
+    deep:  ['добавь босса в конце','добавь магазин апгрейдов','поменяй мир и героя','сделай два уровня'],
+    small: ['ускори персонажа','сделай выше прыжок','добавь больше монет','усиль контраст фона']
+  },
+  'cool-site': {
+    deep:  ['переделай в другом стиле','добавь блок цен','добавь форму обратной связи'],
+    small: ['поменяй заголовок','добавь ещё одну карточку','сделай ярче CTA','поменяй акцентный цвет']
+  }
+}
+
+const RESULT_TITLES = {
+  'catch-game': '🎮 Твоя игра собрана',
+  'my-page':    '🌐 Твоя страница готова',
+  'platformer': '🕹️ Твой платформер готов',
+  'cool-site':  '💜 Твой лендинг готов'
+}
+
+function pickTermLines(projectId, answers) {
+  const tpl = TERM_LINES[projectId] || TERM_LINES['catch-game']
+  return tpl.map(l => l.replace(/\{(\w+)\}/g, (_, k) => answers?.[k] || '…'))
+}
+
+let _loadTick = null, _termTimer = null, _termPool = [], _termIdx = 0, _termT0 = 0
+
+function setStatus(type, msg) {
+  const el = document.getElementById('statusBar')
+  if (_loadTick)  { clearInterval(_loadTick);  _loadTick  = null }
+  if (_termTimer) { clearTimeout(_termTimer);  _termTimer = null }
+  if (type === 'loading') {
+    el.className = 'status-bar loading term'
+    _termPool = pickTermLines(S.project, S.answers)
+    _termIdx = 0
+    _termT0  = Date.now()
+    el.innerHTML = `
+      <div class="term-head">
+        <div class="term-head-dots"><span></span><span></span><span></span></div>
+        <span class="term-title">claude собирает твой проект</span>
+        <span class="term-clock" id="termClock">0:00</span>
+      </div>
+      <div class="term-log" id="termLog"></div>
+    `
+    streamNextTermLine()
+    _loadTick = setInterval(updateTermClock, 500)
+  } else {
+    el.className = type ? `status-bar ${type}` : 'status-bar'
+    el.innerHTML = msg
+  }
+}
+
+function streamNextTermLine() {
+  const log = document.getElementById('termLog')
+  if (!log) return
+  log.querySelectorAll('.term-line.live').forEach(l => {
+    l.classList.remove('live')
+    l.classList.add('done')
+    const c = l.querySelector('.term-cur'); if (c) c.remove()
+  })
+  // если строки кончились — не упираемся, добавляем «ожидаю ответ» цикл
+  const text = _termIdx < _termPool.length
+    ? _termPool[_termIdx++]
+    : ['жду ответа модели','перечитываю что получилось','собираю всё вместе','шлифую финальные мелочи'][Math.floor(Math.random()*4)]
+  const node = document.createElement('div')
+  node.className = 'term-line live'
+  node.innerHTML = `<span class="term-arrow">›</span>${text}<span class="term-cur">▌</span>`
+  log.appendChild(node)
+  // оставляем максимум 6 строк, скрываем самую старую
+  const lines = log.querySelectorAll('.term-line')
+  if (lines.length > 6) lines[0].remove()
+
+  const delay = 900 + Math.random() * 1700
+  _termTimer = setTimeout(streamNextTermLine, delay)
+}
+
+function updateTermClock() {
+  const c = document.getElementById('termClock'); if (!c) return
+  const sec = Math.floor((Date.now() - _termT0) / 1000)
+  c.textContent = `${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`
+}
+
+// ═════════════════════════════════
+// REVEAL РЕЗУЛЬТАТА — анимированные счётчики
+// ═════════════════════════════════
+function revealResult(code) {
+  const lines = code.split('\n').length
+  const kb    = Math.round(code.length / 1024 * 10) / 10
+  const sec   = S.genSec || 0
+  document.getElementById('resultHeroTitle').textContent = RESULT_TITLES[S.project] || '✨ Готово'
+  // переподнимаем анимацию входа result-hero и iframe (в случае refine)
+  const hero  = document.getElementById('resultHero')
+  const frame = document.getElementById('previewFrame')
+  ;[hero, frame].forEach(n => { if (!n) return; n.style.animation='none'; void n.offsetWidth; n.style.animation='' })
+  animCount('rstatLines', 0, lines, 1100)
+  animCount('rstatSec',   0, sec,   700)
+  animCount('rstatKb',    0, kb,    900)
+}
+
+function animCount(id, from, to, dur) {
+  const el = document.getElementById(id); if (!el) return
+  const float = (to % 1) !== 0
+  const t0 = performance.now()
+  const tick = (now) => {
+    const p = Math.min((now - t0) / dur, 1)
+    const v = from + (to - from) * (1 - Math.pow(1 - p, 3))
+    el.textContent = float ? v.toFixed(1) : Math.round(v)
+    if (p < 1) requestAnimationFrame(tick)
+  }
+  requestAnimationFrame(tick)
+}
+
+// ═════════════════════════════════
+// VALIDATION
+// ═════════════════════════════════
+// Статические проверки структуры и runtime-прогон в скрытом sandboxed iframe.
+// Цель — поймать самые частые поломки (несбалансированные теги, ReferenceError),
+// чтобы не отдавать ребёнку заведомо битый HTML без хотя бы предупреждения.
+
+function staticValidate(code) {
+  const issues = []
+  if (!/<!doctype\s+html/i.test(code)) issues.push('нет <!DOCTYPE html>')
+  if (!/<\/html\s*>/i.test(code))     issues.push('нет закрывающего </html>')
+  if (!/<\/body\s*>/i.test(code))     issues.push('нет закрывающего </body>')
+  const open  = (code.match(/<script\b[^>]*>/gi) || []).length
+  const close = (code.match(/<\/script\s*>/gi)  || []).length
+  if (open !== close) issues.push('несбалансированные теги <script>')
+  return issues
+}
+
+function runtimeProbe(code) {
+  return new Promise(resolve => {
+    const probe = `<script>(function(){
+  var send=function(k,m){try{parent.postMessage({_vk:'p',kind:k,msg:String(m||'').slice(0,180)},'*')}catch(e){}};
+  window.addEventListener('error',function(e){send('err',(e.message||'error')+' @'+(e.lineno||'?'))});
+  window.addEventListener('unhandledrejection',function(e){send('err','promise: '+((e.reason&&e.reason.message)||e.reason||''))});
+  window.addEventListener('load',function(){send('load','')});
+})();<\/script>`
+    const wrapped = /<\/head>/i.test(code)
+      ? code.replace(/<\/head>/i, probe + '</head>')
+      : code.replace(/<body([^>]*)>/i, '<body$1>' + probe)
+
+    const ifr = document.createElement('iframe')
+    ifr.style.cssText = 'position:absolute;left:-99999px;top:0;width:720px;height:480px;border:0;visibility:hidden;pointer-events:none'
+    ifr.sandbox = 'allow-scripts'
+
+    const errors = []
+    let loaded = false
+    const onMsg = (e) => {
+      if (!e.data || e.data._vk !== 'p') return
+      if (e.data.kind === 'err')  errors.push(e.data.msg)
+      if (e.data.kind === 'load') loaded = true
+    }
+    window.addEventListener('message', onMsg)
+
+    ifr.srcdoc = wrapped
+    document.body.appendChild(ifr)
+
+    setTimeout(() => {
+      window.removeEventListener('message', onMsg)
+      ifr.remove()
+      resolve({ errors, loaded })
+    }, 2500)
+  })
+}
+
+async function validateGenerated(code) {
+  const stat = staticValidate(code)
+  const rt   = await runtimeProbe(code)
+  return {
+    issues: [...stat, ...rt.errors.slice(0, 2)],
+    loaded: rt.loaded
+  }
+}
+
+function showValidationResult(v) {
+  const el = document.getElementById('resultWarn')
+  if (!el) return
+  if (v.issues.length === 0 && v.loaded) {
+    el.classList.remove('show')
+    el.innerHTML = ''
+    return
+  }
+  const head = !v.loaded
+    ? '⚠ Код не запустился чисто с первого раза.'
+    : '⚠ В коде есть подозрительные места.'
+  const body = v.issues.length
+    ? ' Что заметили: ' + v.issues.join('; ') + '.'
+    : ''
+  el.innerHTML = `${head}${body} Если что-то не работает — нажми «↻ Пересобрать» наверху.`
+  el.classList.add('show')
+}
+
+// ═════════════════════════════════
+// REFINE — глубокая доработка / точечные правки
+// ═════════════════════════════════
+// Ограничение в 3 правки на проект; счётчик сбрасывается при новой генерации.
+const REFINE_LIMIT = 3
+let _refineMode = null
+
+function updateRefineCounter() {
+  const left = Math.max(0, REFINE_LIMIT - (S.edits || 0))
+  document.getElementById('refineCntDeep').textContent  = left
+  document.getElementById('refineCntSmall').textContent = left
+  const disabled = left === 0
+  document.getElementById('refineDeepBtn').disabled  = disabled
+  document.getElementById('refineSmallBtn').disabled = disabled
+}
+
+function refine(mode) {
+  if ((S.edits || 0) >= REFINE_LIMIT) return
+  _refineMode = mode
+  document.getElementById('refineTitle').textContent =
+    mode === 'deep' ? '🔧 Глубокая доработка' : '✏ Мелкая правка'
+  document.getElementById('refineSub').textContent = mode === 'deep'
+    ? 'Опиши, что переделать существенно — могу менять механики, дизайн, логику.'
+    : 'Опиши точечную правку — я не буду трогать ничего лишнего.'
+  document.getElementById('refineInput').value = ''
+  // быстрые подсказки специфичные под проект и режим
+  const hints = (REFINE_HINTS[S.project] && REFINE_HINTS[S.project][mode]) || []
+  const chipBox = document.getElementById('refineChips')
+  chipBox.innerHTML = hints.length
+    ? `<span class="refine-chips-label">// быстрые идеи:</span>` +
+      hints.map(h => `<button class="chip" type="button" onclick="addRefineHint(${JSON.stringify(h)})">+ ${h}</button>`).join('')
+    : ''
+  document.getElementById('refineModal').classList.add('show')
+  setTimeout(() => document.getElementById('refineInput').focus(), 50)
+}
+
+function addRefineHint(text) {
+  const ta = document.getElementById('refineInput')
+  const cur = ta.value.trim()
+  ta.value = cur ? cur + '\n' + text : text
+  ta.focus()
+  ta.setSelectionRange(ta.value.length, ta.value.length)
+}
+
+function closeRefine() {
+  document.getElementById('refineModal').classList.remove('show')
+  _refineMode = null
+}
+
+async function submitRefine() {
+  const instr = document.getElementById('refineInput').value.trim()
+  if (!instr) { document.getElementById('refineInput').focus(); return }
+  const mode = _refineMode || 'small'
+  closeRefine()
+
+  const key = (document.getElementById('apiKey').value.trim() || sessionStorage.getItem('ck') || '').trim()
+  if (!hasValidKey(key)) {
+    setStatus('error', '❌ Вставь свой Anthropic API-ключ (sk-ant-…) в шапке справа')
+    document.getElementById('apiKey').classList.add('missing')
+    return
+  }
+
+  const proj = PROJECTS[S.project]
+  const userPrev = [
+    `Автор проекта: ${S.name} (${S.age} лет)`,
+    Object.entries(S.answers).map(([k,v]) => `${k}: ${v}`).join(', ')
+  ].join('\n')
+
+  const editTone = mode === 'deep'
+    ? 'Это запрос на ГЛУБОКУЮ доработку. Слова автора — топ-приоритет: можешь существенно переделать механики, дизайн, поведение. Сохрани ТЗ из system-промта.'
+    : 'Это запрос на ТОЧЕЧНУЮ правку. Внеси ТОЛЬКО то, что сказал автор. Остальной код оставь как есть. Не рефактори, не переделывай рабочие части.'
+  const userEdit = `${editTone}\n\nЧто поправить:\n${instr}\n\nВерни ПОЛНЫЙ обновлённый HTML целиком (как в первый раз) — без markdown.`
+
+  setStatus('loading', '')
+  document.getElementById('refineDeepBtn').disabled  = true
+  document.getElementById('refineSmallBtn').disabled = true
+  S.genStart = Date.now()
+
+  try {
+    const res = await fetch(ANTHROPIC_URL, {
+      method: 'POST',
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 16000,
+        system: proj.system(S.answers) + `\n\n${BASE_RULES}\n\n<frontend_aesthetics>\nИзбегай шаблонных AI-паттернов: банальные шрифты (Inter, Roboto, Arial), клише цветовые схемы (особенно фиолетовые градиенты на белом), предсказуемые layout-паттерны. Используй уникальные шрифты из Google Fonts, цельную цветовую тему, анимации и микро-интеракции. Сделай дизайн неожиданным и запоминающимся — специфичным под тему проекта.\n</frontend_aesthetics>`,
+        messages: [
+          { role: 'user',      content: userPrev },
+          { role: 'assistant', content: S.html },
+          { role: 'user',      content: userEdit }
+        ]
+      })
+    })
+
+    if (!res.ok) {
+      const txt = await res.text()
+      console.error('[Claude API error]', res.status, txt)
+      throw new Error(humanizeAnthropicError(res.status, txt))
+    }
+
+    const data = await res.json()
+    if (data.stop_reason === 'max_tokens') {
+      throw new Error('Ответ обрезан по лимиту токенов — попробуй ещё раз с более короткой правкой')
+    }
+    let code = data.content[0].text
+    const m2 = code.match(/```(?:html)?\n?([\s\S]*?)```/i)
+    if (m2) code = m2[1].trim()
+
+    S.html = code
+    S.genSec = Math.round((Date.now() - S.genStart) / 1000)
+    S.edits = (S.edits || 0) + 1
+    setStatus('', '')
+
+    document.getElementById('previewFrame').srcdoc = code
+    document.getElementById('codePre').textContent = code
+    revealResult(code)
+    validateGenerated(code).then(showValidationResult)
+
+  } catch (e) {
+    console.error('[refine]', e)
+    const _em = e.message || e.name || 'network error'
+    setStatus('error', /^\p{Emoji}/u.test(_em) ? _em : `❌ ${_em}`)
+  } finally {
+    updateRefineCounter()
+  }
+}
+
+// ═════════════════════════════════
+// DOWNLOAD / FULLSCREEN / CODE
+// ═════════════════════════════════
+function downloadHTML() {
+  if (!S.html) return
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob([S.html], {type:'text/html'}))
+  a.download = `${(S.name||'app').toLowerCase()}-${Date.now()}.html`
+  a.click()
+}
+
+function openFull() {
+  if (!S.html) return
+  const w = window.open('', '_blank')
+  w.document.write(S.html); w.document.close()
+}
+
+function toggleCode() {
+  const pre = document.getElementById('codePre')
+  const btn = document.querySelector('.code-toggle-btn')
+  const open = pre.style.display === 'block'
+  pre.style.display = open ? 'none' : 'block'
+  btn.textContent = open ? '</> Посмотреть код ↓' : '</> Скрыть код ↑'
+}
+
+// ═════════════════════════════════
+// EMBED — авто-подстройка высоты iframe в Tilda (нет двойного скролла)
+// ═════════════════════════════════
+;(function(){
+  if (window.parent === window) return // запущено как обычная страница, не в iframe
+  const send = (kind, value) => {
+    try { window.parent.postMessage({ vibeEmbed: kind, value }, '*') } catch(e) {}
+  }
+  const sendHeight = () => {
+    const h = Math.max(
+      document.documentElement.scrollHeight,
+      (document.body && document.body.scrollHeight) || 0
+    )
+    send('height', h)
+  }
+  const sendScrollTop = () => send('scrollTop')
+  window.addEventListener('load', () => { sendHeight(); setTimeout(sendHeight, 400) })
+  if (window.ResizeObserver && document.body) {
+    new ResizeObserver(sendHeight).observe(document.body)
+  }
+  window.__vibeEmbed = { sendHeight, sendScrollTop }
+})();
+</script>
+<noscript>Для работы школы вайбкодеров включите JavaScript в браузере.</noscript>
+</body>
+</html>
