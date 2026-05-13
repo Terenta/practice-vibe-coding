@@ -330,6 +330,12 @@ header{
 }
 .result-warn.show{display:block}
 
+/* во время refine скрываем превью и стат-плашку, оставляем только терминал */
+#s-result.refining .result-hero,
+#s-result.refining .result-warn,
+#s-result.refining .preview-frame,
+#s-result.refining .code-toggle-row{display:none}
+
 /* === RESULT HERO + STATS === */
 .result-hero{
   text-align:center;margin-bottom:18px;
@@ -764,6 +770,8 @@ header{
       <div class="entry-block">
         <label>Сколько тебе лет?</label>
         <div class="age-pills" id="agePills">
+          <button class="age-pill" onclick="pickAge(9,this)">9<small>лет</small></button>
+          <button class="age-pill" onclick="pickAge(10,this)">10<small>лет</small></button>
           <button class="age-pill" onclick="pickAge(11,this)">11<small>лет</small></button>
           <button class="age-pill" onclick="pickAge(12,this)">12<small>лет</small></button>
           <button class="age-pill" onclick="pickAge(13,this)">13<small>лет</small></button>
@@ -830,6 +838,7 @@ header{
         <button class="btn btn-ghost" onclick="goScreen('s-customize')">↻ Пересобрать</button>
       </div>
     </div>
+    <div class="status-bar" id="statusBarResult"></div>
     <div class="result-hero" id="resultHero">
       <div class="result-hero-title" id="resultHeroTitle">✨ Готово</div>
       <div class="result-hero-stats">
@@ -1220,6 +1229,7 @@ async function generate() {
     Object.entries(S.answers).map(([k,v]) => `${k}: ${v}`).join(', ')
   ].join('\n')
 
+  _genMode = 'generate'
   setStatus('loading', '')
   document.getElementById('genBtn').disabled = true
   S.genStart = Date.now()
@@ -1372,66 +1382,100 @@ const RESULT_TITLES = {
   'cool-site':  '💜 Твой лендинг готов'
 }
 
+// Терминал-лог для refine: общие фразы без проектно-специфики
+// (потому что refine — это правка существующего, а не пересборка с нуля)
+const REFINE_TERM_LINES_DEEP = [
+  'читаю текущую версию проекта',
+  'разбираю что просит автор',
+  'продумываю новую механику',
+  'переписываю ключевые блоки',
+  'переделываю стили',
+  'проверяю что игра/сайт всё ещё запускается',
+  'оптимизирую логику',
+  'финальная полировка'
+]
+const REFINE_TERM_LINES_SMALL = [
+  'читаю текущий код',
+  'нахожу нужное место',
+  'аккуратно вношу правку',
+  'проверяю что ничего не сломалось',
+  'финальная полировка'
+]
+
+let _genMode = 'generate' // 'generate' | 'refine-deep' | 'refine-small'
+
 function pickTermLines(projectId, answers) {
+  if (_genMode === 'refine-deep')  return REFINE_TERM_LINES_DEEP.slice()
+  if (_genMode === 'refine-small') return REFINE_TERM_LINES_SMALL.slice()
   const tpl = TERM_LINES[projectId] || TERM_LINES['catch-game']
   return tpl.map(l => l.replace(/\{(\w+)\}/g, (_, k) => answers?.[k] || '…'))
+}
+
+function termTitle() {
+  if (_genMode === 'refine-deep')  return 'claude переделывает проект'
+  if (_genMode === 'refine-small') return 'claude правит проект'
+  return 'claude собирает твой проект'
 }
 
 let _loadTick = null, _termTimer = null, _termPool = [], _termIdx = 0, _termT0 = 0
 
 function setStatus(type, msg) {
-  const el = document.getElementById('statusBar')
+  const bars = document.querySelectorAll('.status-bar')
   if (_loadTick)  { clearInterval(_loadTick);  _loadTick  = null }
   if (_termTimer) { clearTimeout(_termTimer);  _termTimer = null }
   if (type === 'loading') {
-    el.className = 'status-bar loading term'
     _termPool = pickTermLines(S.project, S.answers)
     _termIdx = 0
     _termT0  = Date.now()
-    el.innerHTML = `
+    const html = `
       <div class="term-head">
         <div class="term-head-dots"><span></span><span></span><span></span></div>
-        <span class="term-title">claude собирает твой проект</span>
-        <span class="term-clock" id="termClock">0:00</span>
+        <span class="term-title">${termTitle()}</span>
+        <span class="term-clock">0:00</span>
       </div>
-      <div class="term-log" id="termLog"></div>
+      <div class="term-log"></div>
     `
+    bars.forEach(el => { el.className = 'status-bar loading term'; el.innerHTML = html })
     streamNextTermLine()
     _loadTick = setInterval(updateTermClock, 500)
   } else {
-    el.className = type ? `status-bar ${type}` : 'status-bar'
-    el.innerHTML = msg
+    bars.forEach(el => {
+      el.className = type ? `status-bar ${type}` : 'status-bar'
+      el.innerHTML = msg
+    })
   }
 }
 
 function streamNextTermLine() {
-  const log = document.getElementById('termLog')
-  if (!log) return
-  log.querySelectorAll('.term-line.live').forEach(l => {
+  const logs = document.querySelectorAll('.term-log')
+  if (!logs.length) return
+  // отметить старые live-строки как done во ВСЕХ status-bar
+  document.querySelectorAll('.term-line.live').forEach(l => {
     l.classList.remove('live')
     l.classList.add('done')
     const c = l.querySelector('.term-cur'); if (c) c.remove()
   })
-  // если строки кончились — не упираемся, добавляем «ожидаю ответ» цикл
   const text = _termIdx < _termPool.length
     ? _termPool[_termIdx++]
     : ['жду ответа модели','перечитываю что получилось','собираю всё вместе','шлифую финальные мелочи'][Math.floor(Math.random()*4)]
-  const node = document.createElement('div')
-  node.className = 'term-line live'
-  node.innerHTML = `<span class="term-arrow">›</span>${text}<span class="term-cur">▌</span>`
-  log.appendChild(node)
-  // оставляем максимум 6 строк, скрываем самую старую
-  const lines = log.querySelectorAll('.term-line')
-  if (lines.length > 6) lines[0].remove()
-
+  logs.forEach(log => {
+    const node = document.createElement('div')
+    node.className = 'term-line live'
+    node.innerHTML = `<span class="term-arrow">›</span>${text}<span class="term-cur">▌</span>`
+    log.appendChild(node)
+    const lines = log.querySelectorAll('.term-line')
+    if (lines.length > 6) lines[0].remove()
+  })
   const delay = 900 + Math.random() * 1700
   _termTimer = setTimeout(streamNextTermLine, delay)
 }
 
 function updateTermClock() {
-  const c = document.getElementById('termClock'); if (!c) return
+  const clocks = document.querySelectorAll('.term-clock')
+  if (!clocks.length) return
   const sec = Math.floor((Date.now() - _termT0) / 1000)
-  c.textContent = `${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`
+  const txt = `${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`
+  clocks.forEach(c => c.textContent = txt)
 }
 
 // ═════════════════════════════════
@@ -1618,6 +1662,8 @@ async function submitRefine() {
     : 'Это запрос на ТОЧЕЧНУЮ правку. Внеси ТОЛЬКО то, что сказал автор. Остальной код оставь как есть. Не рефактори, не переделывай рабочие части.'
   const userEdit = `${editTone}\n\nЧто поправить:\n${instr}\n\nВерни ПОЛНЫЙ обновлённый HTML целиком (как в первый раз) — без markdown.`
 
+  _genMode = mode === 'deep' ? 'refine-deep' : 'refine-small'
+  document.getElementById('s-result').classList.add('refining')
   setStatus('loading', '')
   document.getElementById('refineDeepBtn').disabled  = true
   document.getElementById('refineSmallBtn').disabled = true
@@ -1673,6 +1719,7 @@ async function submitRefine() {
     const _em = e.message || e.name || 'network error'
     setStatus('error', /^\p{Emoji}/u.test(_em) ? _em : `❌ ${_em}`)
   } finally {
+    document.getElementById('s-result').classList.remove('refining')
     updateRefineCounter()
   }
 }
